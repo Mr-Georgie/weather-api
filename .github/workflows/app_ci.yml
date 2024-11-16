@@ -1,12 +1,8 @@
 name: weather_api_wrapper
 
 on:
-    push:
-        branches:
-            - "*" # Runs on push to any branch
     pull_request:
-        branches:
-            - "*" # Runs on pull request to any branch
+        branches: ["*"]
 
 jobs:
     Test:
