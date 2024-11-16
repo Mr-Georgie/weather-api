@@ -9,6 +9,14 @@ import { AuthModule } from "./auth/auth.module";
 import { CacheModule } from "./cache/cache.module";
 import { WeatherGraphqlModule } from "./weather.graphql/weather.graphql.module";
 import { UsersService } from "./users/users.service";
+import { ExternalApiModule } from "./external-api/external-api.module";
+import { AppConfigService } from "./app-config/app-config.service";
+import { AppConfigModule } from "./app-config/app-config.module";
+import { CustomLoggerService } from "./common/services/custom-logger.service";
+import { CacheService } from "./cache/cache.service";
+import { ExternalApiService } from "./external-api/external-api.service";
+import { HttpModule, HttpService } from "@nestjs/axios";
+import { WeatherModule } from "./weather/weather.module";
 
 @Module({
     imports: [
@@ -17,14 +25,14 @@ import { UsersService } from "./users/users.service";
             isGlobal: true,
         }),
         TypeOrmModule.forRootAsync({
-            imports: [ConfigModule],
-            useFactory: (configService: ConfigService) => ({
+            imports: [AppConfigModule],
+            useFactory: (appConfigService: AppConfigService) => ({
                 type: "postgres",
-                host: configService.get("DATABASE_HOST"),
-                port: configService.get("DATABASE_PORT"),
-                username: configService.get("DATABASE_USER"),
-                password: configService.get("DATABASE_PASS"),
-                database: configService.get("DATABASE_NAME"),
+                host: appConfigService.getDbHost(),
+                port: appConfigService.getDbPort(),
+                username: appConfigService.getDbUsername(),
+                password: appConfigService.getDbPassword(),
+                database: appConfigService.getDbName(),
                 entities: [
                     __dirname + "/database/entities/**/*.entity{.ts,.js}",
                 ],
@@ -33,15 +41,17 @@ import { UsersService } from "./users/users.service";
                 namingStrategy: new SnakeNamingStrategy(),
                 softDelete: true,
             }),
-            inject: [ConfigService],
+            inject: [AppConfigService],
         }),
-
         AuthModule,
+        ExternalApiModule,
         CacheModule,
         UsersModule,
+        WeatherModule,
         WeatherGraphqlModule,
+        ExternalApiModule,
     ],
     controllers: [AppController],
-    providers: [AppService, UsersService],
+    providers: [AppService],
 })
 export class AppModule {}

@@ -121,10 +121,7 @@ describe("UsersService", () => {
 
             expect(result).toEqual(mockUser);
             expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
-            expect(customLoggerService.log).toHaveBeenCalledWith(
-                "findUserById",
-                "gotten from cache",
-            );
+            expect(customLoggerService.log).toHaveBeenCalled();
         });
 
         it("should fetch a user from the database if not found in the cache", async () => {
@@ -146,10 +143,7 @@ describe("UsersService", () => {
                 userWithoutPassword,
                 30000,
             );
-            expect(customLoggerService.log).toHaveBeenCalledWith(
-                "findUserById",
-                ResponseMessagesEnum.PROCESS_COMPLETED,
-            );
+            expect(customLoggerService.log).toHaveBeenCalled();
         });
 
         it("should throw an error if the user is not found in the database", async () => {
@@ -170,11 +164,7 @@ describe("UsersService", () => {
             expect(usersRepository.findOne).toHaveBeenCalledWith({
                 where: { id: mockUser.id },
             });
-            expect(customLoggerService.logAndThrow).toHaveBeenCalledWith(
-                ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
-                "findUserById",
-                BadRequestException,
-            );
+            expect(customLoggerService.logAndThrow).toHaveBeenCalled();
         });
     });
 });

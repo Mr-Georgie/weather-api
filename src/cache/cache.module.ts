@@ -3,25 +3,29 @@ import { Cacheable } from "cacheable";
 import { CacheService } from "./cache.service";
 import KeyvRedis from "@keyv/redis";
 import { ConfigService } from "@nestjs/config";
+import { AppConfigService } from "src/app-config/app-config.service";
+import { AppConfigModule } from "src/app-config/app-config.module";
 
 @Module({
+    imports: [AppConfigModule],
     providers: [
         {
             provide: "CACHE_INSTANCE",
-            useFactory: (configService: ConfigService) => {
-                const host = configService.get("REDIS_HOST");
-                const port = configService.get("REDIS_PORT");
-                const password = configService.get("REDIS_PASS");
-                const db = configService.get("REDIS_DB");
-                const username = configService.get("REDIS_USER");
-                const ttl = configService.get("REDIS_TTL");
+            useFactory: (appConfigService: AppConfigService) => {
+                const host = appConfigService.getRedisHost();
+                const port = appConfigService.getRedisPort();
+                const password = appConfigService.getRedisPassword();
+                const db = appConfigService.getRedisName();
+                const username = appConfigService.getRedisUsername();
+                const ttl = appConfigService.getRedisTtl();
                 const secondary = new KeyvRedis(
                     `redis://${username}:${password}@${host}:${port}/${db}`,
                 );
                 return new Cacheable({ secondary, ttl });
             },
-            inject: [ConfigService],
+            inject: [AppConfigService],
         },
+        AppConfigService,
         CacheService,
     ],
     exports: ["CACHE_INSTANCE"],

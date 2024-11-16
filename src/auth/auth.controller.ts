@@ -4,27 +4,27 @@ import {
     Controller,
     Post,
     Res,
-} from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { LoginUserDto } from './dto/login-user.dto';
-import { Response } from 'express';
-import { ResponseMessagesEnum } from 'src/common/enums/response-messages.enum';
-import { ResponseCodesEnum } from 'src/common/enums/response-codes.enum';
-import { AppConfigService } from 'src/common/services/app-config.service';
-import { AuthService } from './auth.service';
-import { createResponse } from 'src/common/utils/general-utils';
-import { SignupUserDto } from './dto/create-user.dto';
+} from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { LoginUserDto } from "./dto/login-user.dto";
+import { Response } from "express";
+import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
+import { ResponseCodesEnum } from "src/common/enums/response-codes.enum";
+import { AppConfigService } from "src/app-config/app-config.service";
+import { AuthService } from "./auth.service";
+import { createResponse } from "src/common/utils/general-utils";
+import { SignupUserDto } from "./dto/create-user.dto";
 
-@ApiTags('authenication')
-@Controller('auth')
+@ApiTags("authenication")
+@Controller("auth")
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
         private appConfigService: AppConfigService,
     ) {}
 
-    @Post('signup')
-    @ApiOperation({ summary: 'Signup' })
+    @Post("signup")
+    @ApiOperation({ summary: "Signup" })
     @ApiBody({ type: SignupUserDto })
     @ApiResponse({
         status: ResponseCodesEnum.CREATED,
@@ -46,12 +46,12 @@ export class AuthController {
 
         const expiresIn = this.appConfigService.getTokenExpirationTime();
 
-        response.cookie('token', access_token, {
+        response.cookie("token", access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
             maxAge: expiresIn, // 1 hour
-            path: '/',
+            path: "/",
         });
 
         return createResponse(
@@ -60,8 +60,8 @@ export class AuthController {
         );
     }
 
-    @Post('login')
-    @ApiOperation({ summary: 'Login' })
+    @Post("login")
+    @ApiOperation({ summary: "Login" })
     @ApiBody({ type: LoginUserDto })
     @ApiResponse({
         status: ResponseCodesEnum.SUCCESS,
@@ -87,12 +87,12 @@ export class AuthController {
 
         const expiresIn = this.appConfigService.getTokenExpirationTime();
 
-        response.cookie('token', access_token, {
+        response.cookie("token", access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
             maxAge: expiresIn, // 1 hour
-            path: '/',
+            path: "/",
         });
 
         return createResponse(

@@ -2,14 +2,9 @@ export enum ResponseMessagesEnum {
     // Success messages
     LOGIN_SUCCESS = "Login successful",
     SIGNUP_SUCCESS = "Signup successful",
-    SUCCESS = "Request was successful",
+    SUCCESS = "Request successful",
     UPDATE_SUCCESS = "Update successful",
     CREATED = "Created successfully",
-
-    // DB operations
-    RECORD_CREATED = "A new record has been added to the db",
-    PROCESSING = "Processing",
-    PROCESS_COMPLETED = "Process completed",
 
     // Error messages
     EMAIL_ALREADY_EXISTS = "Email already exists",

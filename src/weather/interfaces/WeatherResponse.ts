@@ -1,5 +1,4 @@
 export interface WeatherResponse {
-    location: Location;
     current: Current;
 }
 

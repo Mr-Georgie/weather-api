@@ -12,6 +12,7 @@ import { UsersService } from "src/users/users.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { User } from "src/database/entities/users.entity";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
+import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
 
 @Injectable()
 export class AuthService {
@@ -23,9 +24,9 @@ export class AuthService {
     ) {}
 
     async signup(signupUserDto: SignupUserDto): Promise<string> {
-        const action = "signup";
+        const method = this.signup.name;
 
-        await this.checkForExistingUser(signupUserDto.email, action);
+        await this.checkIfUserExists(signupUserDto.email);
 
         const hashedPassword = await this.passwordService.hashPassword(
             signupUserDto.password,
@@ -37,8 +38,8 @@ export class AuthService {
         );
 
         this.customLoggerService.log(
-            action,
-            ResponseMessagesEnum.RECORD_CREATED,
+            method,
+            LogMessagesEnum.USER_CREATED,
         );
 
         return this.generateToken(user);
@@ -47,53 +48,17 @@ export class AuthService {
     async login(loginDto: LoginUserDto): Promise<string> {
         const user = await this.validateUser(loginDto.email, loginDto.password);
 
-        this.customLoggerService.log("login", "About to generate token");
+        this.customLoggerService.log(
+            this.login.name,
+            LogMessagesEnum.AUTH_LOGIN_SUCCESS,
+        );
 
         return this.generateToken(user);
     }
 
     async validateUser(email: string, password: string): Promise<User> {
-        const action = "validateUser";
-
-        let user: User | null = null;
-
-        // handle error here because its not handled in the user service method
-        try {
-            user = await this.usersService.findUserByEmail(
-                email,
-                false, // !isSignUp
-            );
-        } catch (error) {
-            this.customLoggerService.handleError(error, action);
-        }
-
-        if (!user) {
-            this.customLoggerService.logAndThrow(
-                ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
-                action,
-                BadRequestException,
-            );
-        }
-        const isMatch: boolean = await this.passwordService.comparePasswords(
-            password,
-            user.password,
-        );
-        if (!isMatch) {
-            this.customLoggerService.logAndThrow(
-                ResponseMessagesEnum.PASSWORD_MISMATCH,
-                action,
-                BadRequestException,
-            );
-        }
-
-        const { password: _, ...userWithoutPassword } = user;
-
-        this.customLoggerService.log(
-            action,
-            ResponseMessagesEnum.PROCESS_COMPLETED,
-        );
-
-        return userWithoutPassword as User;
+        const user = await this.findUser(email);
+        return await this.matchPasswords(password, user);
     }
 
     async generateToken(user: User): Promise<string> {
@@ -105,32 +70,82 @@ export class AuthService {
         const token = this.jwtService.sign(payload);
 
         this.customLoggerService.log(
-            "generateToken",
-            ResponseMessagesEnum.PROCESS_COMPLETED,
+            this.generateToken.name,
+            LogMessagesEnum.AUTH_TOKEN_GENERATED,
         );
 
         return token;
     }
 
-    async checkForExistingUser(email: string, action: string): Promise<void> {
-        let existingUser: User | null = null;
+    private async matchPasswords(password: string, user: User): Promise<User> {
+        const method = this.matchPasswords.name;
 
-        // handle error here because its not handled in the user service method
-        try {
-            existingUser = await this.usersService.findUserByEmail(
-                email,
-                true, // isSignup
-            );
-        } catch (error) {
-            this.customLoggerService.handleError(error, action);
-        }
-
-        if (existingUser) {
+        const isMatch: boolean = await this.passwordService.comparePasswords(
+            password,
+            user.password,
+        );
+        if (!isMatch) {
             this.customLoggerService.logAndThrow(
-                ResponseMessagesEnum.EMAIL_ALREADY_EXISTS,
-                action,
+                ResponseMessagesEnum.PASSWORD_MISMATCH,
+                this.matchPasswords.name,
                 BadRequestException,
             );
         }
+
+        const { password: _, ...userWithoutPassword } = user;
+
+        this.customLoggerService.log(
+            method,
+            LogMessagesEnum.PROCESS_COMPLETED,
+        );
+
+        return userWithoutPassword as User;
     }
+
+    private async checkIfUserExists(email: string): Promise<void> {
+        await this.handleUserLookup(
+            email,
+            true, // isSignUp
+            ResponseMessagesEnum.EMAIL_ALREADY_EXISTS,
+        );
+    }
+    
+    private async findUser(email: string): Promise<User> {
+        return (await this.handleUserLookup(
+            email,
+            false, // isSignUp
+            ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
+        )) as User;
+    }
+    
+
+    private async handleUserLookup(
+        email: string,
+        isSignUp: boolean,
+        errorMessage: ResponseMessagesEnum,
+    ): Promise<User | void> {
+        const method = this.handleUserLookup.name;
+    
+        let user: User | null = null;
+    
+        try {
+            user = await this.usersService.findUserByEmail(email, isSignUp);
+        } catch (error) {
+            this.customLoggerService.handleError(error, method);
+        }
+    
+        const foundUserDuringSignUp = (isSignUp && user)
+        const noUserFoundDuringLogin = (!isSignUp && !user)
+
+        if (foundUserDuringSignUp || noUserFoundDuringLogin) {
+            this.customLoggerService.logAndThrow(
+                errorMessage,
+                method,
+                BadRequestException,
+            );
+        }
+    
+        return user || undefined; // Explicitly return undefined for `void`
+    }
+    
 }
