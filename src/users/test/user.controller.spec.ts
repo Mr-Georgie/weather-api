@@ -1,14 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { JwtAuthGuard } from "src/auth/security/jwt-auth.guard";
 import { ResponseCodesEnum } from "src/common/enums/response-codes.enum";
-import { createPaginatedResponse } from "src/common/utils/paginated-response.utils";
 import { UsersController } from "../users.controller";
 import { UsersService } from "../users.service";
 import { LoginUserDto } from "src/auth/dto/login-user.dto";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { User } from "src/database/entities/users.entity";
-import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
-import { UnauthorizedException } from "@nestjs/common";
 
 describe("UsersController", () => {
     let controller: UsersController;
@@ -56,6 +53,10 @@ describe("UsersController", () => {
 
         controller = module.get<UsersController>(UsersController);
         usersService = module.get<UsersService>(UsersService);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     it("should be defined", () => {

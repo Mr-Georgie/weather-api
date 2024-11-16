@@ -5,6 +5,8 @@ import { User } from "src/database/entities/users.entity";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { Not } from "typeorm";
+import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
+import { BadRequestException } from "@nestjs/common";
 
 describe("UsersService", () => {
     let service: UsersService;
@@ -15,7 +17,7 @@ describe("UsersService", () => {
     const testEmail = "test@mail.com";
 
     const mockUser = {
-        id: "user-id",
+        id: "some-user-id",
         email: testEmail,
         password: "password123",
         created_at: "2024-11-15T12:55:19.631Z",
@@ -24,7 +26,7 @@ describe("UsersService", () => {
     };
 
     const mockDeletedUser = {
-        id: "user-id",
+        id: "some-user-id",
         email: testEmail,
         password: "password123",
         created_at: "2024-11-15T12:55:19.631Z",
@@ -37,7 +39,9 @@ describe("UsersService", () => {
     };
 
     const mockCacheService = {
-        findOne: jest.fn(),
+        get: jest.fn(),
+        set: jest.fn(),
+        del: jest.fn(),
     };
 
     const mockCustomLoggerService = {
@@ -104,6 +108,73 @@ describe("UsersService", () => {
                     email: testEmail,
                 },
             });
+        });
+    });
+
+    describe("findUserById", () => {
+        const cacheKey = `user:${mockUser.id}`;
+        it("should return a user from the cache if found", async () => {
+            const mockCacheUser = mockUser as unknown as User;
+            jest.spyOn(cacheService, "get").mockResolvedValue(mockCacheUser);
+
+            const result = await service.findUserById("some-user-id");
+
+            expect(result).toEqual(mockUser);
+            expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
+            expect(customLoggerService.log).toHaveBeenCalledWith(
+                "findUserById",
+                "gotten from cache",
+            );
+        });
+
+        it("should fetch a user from the database if not found in the cache", async () => {
+            const { password: _, ...userWithoutPassword } = mockUser;
+
+            jest.spyOn(cacheService, "get").mockResolvedValue(null);
+            jest.spyOn(usersRepository, "findOne").mockResolvedValue(mockUser);
+            jest.spyOn(cacheService, "set").mockResolvedValue(undefined);
+
+            const result = await service.findUserById(mockUser.id);
+
+            expect(result).toEqual(userWithoutPassword);
+            expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
+            expect(usersRepository.findOne).toHaveBeenCalledWith({
+                where: { id: mockUser.id },
+            });
+            expect(cacheService.set).toHaveBeenCalledWith(
+                cacheKey,
+                userWithoutPassword,
+                30000,
+            );
+            expect(customLoggerService.log).toHaveBeenCalledWith(
+                "findUserById",
+                ResponseMessagesEnum.PROCESS_COMPLETED,
+            );
+        });
+
+        it("should throw an error if the user is not found in the database", async () => {
+            jest.spyOn(cacheService, "get").mockResolvedValue(null);
+            jest.spyOn(usersRepository, "findOne").mockResolvedValue(null);
+            jest.spyOn(customLoggerService, "logAndThrow").mockImplementation(
+                () => {
+                    throw new BadRequestException(
+                        ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
+                    );
+                },
+            );
+
+            await expect(service.findUserById(mockUser.id)).rejects.toThrow(
+                BadRequestException,
+            );
+            expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
+            expect(usersRepository.findOne).toHaveBeenCalledWith({
+                where: { id: mockUser.id },
+            });
+            expect(customLoggerService.logAndThrow).toHaveBeenCalledWith(
+                ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
+                "findUserById",
+                BadRequestException,
+            );
         });
     });
 });
