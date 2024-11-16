@@ -2,12 +2,12 @@ import {
     Injectable,
     ExecutionContext,
     UnauthorizedException,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from '../auth.service';
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { AuthService } from "../auth.service";
 
 @Injectable()
-export class LocalAuthGuard extends AuthGuard('local') {
+export class LocalAuthGuard extends AuthGuard("local") {
     constructor(private authService: AuthService) {
         super();
     }
