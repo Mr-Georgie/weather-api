@@ -44,28 +44,28 @@ DATABASE_NAME="your database name"
 DATABASE_SCHEMA="your schema"
 ```
 
-4. **Database Setup**
+4. **a. Database Setup**
 
 Ensure your PostgreSQL server is running and the database credentials are specified in the `.env`. You can create the database using the PostgreSQL command line or any database management tool.
 
-4b. **Database migrations**
+**b. Database migrations**
+
+Generate migrations:
+
+```sh
+  npm run migration:generate
+```
 
 Run migrations:
 
 ```sh
-  npm run db:migrate
+  npm run migration:run
 ```
 
 Undo last migrations:
 
 ```sh
-  npm run db:migrate:undo
-```
-
-Undo all migrations:
-
-```sh
-  npm run db:migrate:undo:all
+  npm run migration:revert
 ```
 
 5. **Running the Application**
