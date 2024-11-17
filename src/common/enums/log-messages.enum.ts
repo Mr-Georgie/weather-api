@@ -15,7 +15,7 @@ export enum LogMessagesEnum {
     // External API Operations
     API_REQUEST_INITIATED = "External API request initiated.",
     API_REQUEST_SUCCESS = "External API request completed successfully.",
-    API_REQUEST_FAILURE = "External API request failed.",
+    API_REQUEST_FAILURE = "External API request failed",
     API_RESPONSE_TIMEOUT = "External API request timed out.",
     API_INVALID_RESPONSE = "Received invalid response from external API.",
 

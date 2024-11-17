@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { WeatherService } from "./weather.service";
-import { WeatherController } from "./weather.controller";
 import { ExternalApiModule } from "src/external-api/external-api.module";
 import { AppConfigModule } from "src/app-config/app-config.module";
 import { AppConfigService } from "src/app-config/app-config.service";
@@ -16,7 +15,11 @@ import { CacheModule } from "src/cache/cache.module";
         CustomLoggerService,
         CacheService,
     ],
-    controllers: [WeatherController],
-    exports: [WeatherService],
+    exports: [
+        WeatherService,
+        AppConfigService,
+        CustomLoggerService,
+        CacheService,
+    ],
 })
 export class WeatherModule {}

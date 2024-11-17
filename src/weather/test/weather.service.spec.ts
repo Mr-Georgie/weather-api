@@ -2,15 +2,14 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { WeatherService } from "../weather.service";
 import { CacheService } from "src/cache/cache.service";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
-import { WeatherResponse } from "../interfaces/WeatherResponse";
+import { CurrentCityWeatherResponse } from "../interfaces/CurrentCityWeatherResponse";
 import { CACHE_KEYS, CACHE_TTL } from "src/cache/cache.config";
-import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
 import { ExternalApiService } from "src/external-api/external-api.service";
 import { AppConfigService } from "src/app-config/app-config.service";
 
 describe("WeatherService", () => {
     let service: WeatherService;
-    let cacheService: CacheService<WeatherResponse>;
+    let cacheService: CacheService;
     let customLoggerService: CustomLoggerService;
     let externalApiService: ExternalApiService;
     let appConfigService: AppConfigService;
@@ -74,7 +73,7 @@ describe("WeatherService", () => {
         }).compile();
 
         service = module.get<WeatherService>(WeatherService);
-        cacheService = module.get<CacheService<WeatherResponse>>(CacheService);
+        cacheService = module.get<CacheService>(CacheService);
         externalApiService = module.get<ExternalApiService>(ExternalApiService);
         appConfigService = module.get<AppConfigService>(AppConfigService);
         customLoggerService =
@@ -110,7 +109,7 @@ describe("WeatherService", () => {
 
         it("should return a current city weather from the cache if found", async () => {
             const mockCacheCityData =
-                mockCityCurrentData as unknown as WeatherResponse;
+                mockCityCurrentData as unknown as CurrentCityWeatherResponse;
 
             jest.spyOn(cacheService, "get").mockResolvedValue(
                 mockCacheCityData,

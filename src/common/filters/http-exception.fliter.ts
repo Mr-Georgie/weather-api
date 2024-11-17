@@ -22,7 +22,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
             ResponseMessagesEnum.SERVER_ERROR;
         const stack = exception.message;
 
-        this.logger.error(`Status: ${status} | Message: ${message}`, stack);
+        this.logger.error(`STATUS [${status}] - MESSAGE [${message}]`, stack);
 
         response.status(status).json(createResponse(status, message));
     }

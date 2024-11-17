@@ -1,5 +1,6 @@
-export interface WeatherResponse {
+export interface CurrentCityWeatherResponse {
     current: Current;
+    location: Location;
 }
 
 export interface Location {

@@ -1,5 +1,6 @@
 import { HttpService } from "@nestjs/axios";
 import {
+    BadRequestException,
     HttpException,
     Injectable,
     RequestTimeoutException,
@@ -8,6 +9,7 @@ import { AxiosError } from "axios";
 import {
     catchError,
     firstValueFrom,
+    Observable,
     retry,
     timeout,
     TimeoutError,
@@ -16,6 +18,9 @@ import {
 import { AppConfigService } from "src/app-config/app-config.service";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
+import { GraphQLError } from "graphql";
+import { ApiErrorResponse } from "./ApiErrorResponse";
+// import { ExternalApiErrorResponse } from "./ExternalApiResponse";
 
 @Injectable()
 export class ExternalApiService {
@@ -54,56 +59,94 @@ export class ExternalApiService {
                         timeout(timeoutMs), // Timeout for the request
                         retry({
                             count: retries,
-                            delay: (error, attempt) => {
-                                this.customLoggerService.log(
+                            delay: (error, attempt) =>
+                                this.handleRetry(
+                                    error,
+                                    attempt,
+                                    retries,
+                                    url,
                                     method,
-                                    `Retrying request to ${url} (Attempt ${attempt}/${retries})`,
-                                    "warn",
-                                );
-                                this.customLoggerService.log(
-                                    method,
-                                    error.message,
-                                    "warn",
-                                );
-                                // Calculate delay with exponential backoff
-                                const delayMs = this.calculateBackoff(attempt);
-                                return timer(delayMs);
-                            },
+                                ),
                         }),
-                        catchError((error) => {
-                            if (error instanceof TimeoutError) {
-                                this.customLoggerService.logAndThrow(
-                                    `Request to ${url} timed out after ${timeoutMs}ms`,
-                                    method,
-                                    RequestTimeoutException,
-                                );
-                            }
-
-                            if (error instanceof AxiosError) {
-                                this.customLoggerService.log(
-                                    method,
-                                    LogMessagesEnum.API_REQUEST_FAILURE,
-                                    "warn",
-                                );
-                                this.customLoggerService.logAndThrow(
-                                    `${error.response?.data?.message || error.message}`,
-                                    method,
-                                    HttpException,
-                                );
-                            }
-
-                            throw error;
-                        }),
+                        catchError((error) =>
+                            this.handleError(error, url, method, timeoutMs),
+                        ),
                     ),
             );
 
             return response.data;
         } catch (error) {
-            this.customLoggerService.handleError(
-                error instanceof Error ? error.stack : error.message,
-                method,
-            );
+            throw error; // Re-throw the error to avoid silent failures
         }
+    }
+
+    private handleRetry(
+        error: any,
+        attempt: number,
+        retries: number,
+        url: string,
+        method: string,
+    ): Observable<number> {
+        const statusCode = error.response?.status;
+        // Do not retry error with 400, 401 or 403 status
+        if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
+            throw error;
+        }
+        this.customLoggerService.log(
+            method,
+            `Retrying request to ${url} (Attempt ${attempt}/${retries}) - ${error.message}`,
+            "warn",
+        );
+        const delayMs = this.calculateBackoff(attempt);
+        return timer(delayMs);
+    }
+
+    private handleError(
+        error: any,
+        url: string,
+        method: string,
+        timeoutMs: number,
+    ): never {
+        {
+            if (error instanceof TimeoutError) {
+                this.customLoggerService.logAndThrow(
+                    `Request to ${url} timed out after ${timeoutMs}ms`,
+                    method,
+                    RequestTimeoutException,
+                );
+            }
+
+            if (error instanceof AxiosError) {
+                this.handleAxiosError(error, method);
+            }
+            // Rethrow any other error
+            throw error;
+        }
+    }
+
+    private handleAxiosError(error: ApiErrorResponse, method: string): void {
+        const errorInfo = {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message,
+            code: error.code,
+        };
+
+        this.customLoggerService.log(
+            method,
+            `Request failed: ${JSON.stringify(errorInfo)}`,
+            "warn",
+        );
+
+        // Throw GraphQL error with detailed extensions
+        throw new GraphQLError(error.response?.data?.error?.message, {
+            extensions: {
+                status: error.response?.status || 500,
+                code: error.code || "INTERNAL_SERVER_ERROR",
+                method,
+            },
+        });
     }
 
     private calculateBackoff(retryCount: number): number {

@@ -13,7 +13,7 @@ export class UsersService {
         @InjectRepository(User)
         private usersRepository: Repository<User>,
         private readonly customLoggerService: CustomLoggerService,
-        private readonly cacheService: CacheService<User>,
+        private readonly cacheService: CacheService,
     ) {}
 
     async createUser(email: string, password: string): Promise<User> {
@@ -106,7 +106,7 @@ export class UsersService {
         cacheKey: string,
     ): Promise<User> {
         // const cachedUser = await this.cacheService.get<User>(cacheKey);
-        const cachedUser = await this.cacheService.get(cacheKey);
+        const cachedUser = await this.cacheService.get<User>(cacheKey);
 
         if (cachedUser) {
             this.customLoggerService.log(
