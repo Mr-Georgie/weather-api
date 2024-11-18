@@ -1,6 +1,6 @@
 import { Condition, Current, Location } from "./CurrentCityWeatherResponse";
 
-export interface ForecastWeatherResponse {
+export interface WeatherForecastResponse {
     location: Location;
     current: Current;
     forecast: Forecast;

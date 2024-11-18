@@ -34,6 +34,9 @@ describe("WeatherService", () => {
         getWeatherApiCurrentCityUrl: jest
             .fn()
             .mockResolvedValue("https://somecoolurl.com"),
+        getWeatherApiCityForecastUrl: jest
+            .fn()
+            .mockResolvedValue("https://somecoolurl.com"),
         getWeatherApiKey: jest.fn().mockResolvedValue("939944399399393"),
     };
 

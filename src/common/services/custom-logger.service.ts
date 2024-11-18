@@ -11,8 +11,9 @@ export class CustomLoggerService {
     log(method: string, message: string, type?: string): void {
         if (type === "warn") {
             this.logger.warn(this.formatMessage(method, message));
+        } else {
+            this.logger.log(this.formatMessage(method, message));
         }
-        this.logger.log(this.formatMessage(method, message));
     }
 
     logAndThrow(

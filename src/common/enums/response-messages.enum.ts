@@ -12,11 +12,12 @@ export enum ResponseMessagesEnum {
     ACCOUNT_NOT_FOUND = "Account not found",
     PASSWORD_MISMATCH = "Password does not match",
     INVALID_DETAILS = "Invalid details passed",
-    BAD_REQUEST = "Bad request",
+    BAD_REQUEST = "BAD_REQUEST",
     UNAUTHORIZED = "Unauthorized. Please login",
     USER_PERMISSION_DENIED = "You do not have permission to do this",
     FORBIDDEN = "Forbidden resource",
 
     // Server messages
     SERVER_ERROR = "Internal server error. Contact developer",
+    API_KEY_LIMIT_ISSUES = "There's an API key/limit issue",
 }

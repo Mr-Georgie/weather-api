@@ -20,6 +20,7 @@ import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
 import { GraphQLError } from "graphql";
 import { ApiErrorResponse } from "./ApiErrorResponse";
+import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
 // import { ExternalApiErrorResponse } from "./ExternalApiResponse";
 
 @Injectable()
@@ -143,7 +144,7 @@ export class ExternalApiService {
         throw new GraphQLError(error.response?.data?.error?.message, {
             extensions: {
                 status: error.response?.status || 500,
-                code: error.code || "INTERNAL_SERVER_ERROR",
+                code: this.formatCode(error.response?.status),
                 method,
             },
         });
@@ -159,5 +160,20 @@ export class ExternalApiService {
         );
         // Add random jitter of ±100ms
         return exponentialDelay + Math.random() * 200 - 100;
+    }
+
+    private formatCode(statusCode: number): string {
+        switch (
+            statusCode 
+        ) {
+            case 400:
+                return ResponseMessagesEnum.BAD_REQUEST
+            case 401:
+                return ResponseMessagesEnum.UNAUTHORIZED
+            case 403:
+                return ResponseMessagesEnum.API_KEY_LIMIT_ISSUES
+            default:
+                return ResponseMessagesEnum.SERVER_ERROR
+            }
     }
 }

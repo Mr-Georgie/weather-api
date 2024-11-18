@@ -1,8 +1,10 @@
 import { Resolver, Query, Args } from "@nestjs/graphql";
 import { WeatherService } from "src/weather/weather.service";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
-import { ForecastWeather } from "./models/forecast.model";
+import { WeatherForecast } from "./models/forecast.model";
 import { CurrentCityWeather } from "./models/current.model";
+import { CityArgs } from "./dto/city.dto";
+import { GraphQLError } from "graphql";
 
 /**
  * GraphQL Resolver for handling weather-related queries.
@@ -23,13 +25,13 @@ export class WeatherGraphqlResolver {
     /**
      * Fetches a 5-day weather forecast for a specified city.
      * @param cityName Name of the city for which the forecast is requested.
-     * @returns A `ForecastWeather` object containing the weather forecast data, or `null` if not found.
+     * @returns A `WeatherForecast` object containing the weather forecast data, or `null` if not found.
      *
      * @example
      * Query:
      * ```
      * query {
-     *  getCurrentCityWeather(cityName: "new") {
+     *  getWeatherForecast(cityName: "new") {
      *       location {
      *          name
      *         country
@@ -38,25 +40,63 @@ export class WeatherGraphqlResolver {
      *}
      * ```
      */
-    @Query(() => ForecastWeather, {
+    @Query(() => WeatherForecast, {
         nullable: true,
-        description: "Get a 5-day weather forecast for a specified city.",
+        description: `Get the current weather for a specified city.
+
+            Example Query:
+            query {
+                getWeatherForecast(cityName: "leeds") {
+                    location {
+                        name
+                        country
+                        lat
+                        lon
+                        region
+                    }
+                    current {
+                        temp_c
+                        condition {
+                            text
+                            icon
+                        }
+                    }
+                    forecast {
+                        forecastday {
+                            date
+                            day {
+                            maxtemp_c
+                            mintemp_c
+                            condition {
+                                text
+                            }
+                            }
+                            hour {
+                            time
+                            temp_c
+                            condition {
+                                text
+                            }
+                            }
+                        }
+                    }
+                    alerts {
+                        alert {
+                            headline
+                            event
+                            desc
+                        }
+                    }
+                }
+            }`,
     })
-    async getForecastWeather(
-        @Args("cityName", {
-            description:
-                "The name of the city for which to retrieve the weather forecast.",
-        })
-        cityName: string,
-    ): Promise<ForecastWeather | null> {
+    async getWeatherForecast(
+        @Args() args: CityArgs,
+    ): Promise<WeatherForecast | null> {
         try {
-            return await this.weatherService.getFiveDayForecast(cityName);
+            return await this.weatherService.getFiveDayForecast(args.city);
         } catch (error) {
-            this.customLoggerService.handleError(
-                error.message,
-                this.getForecastWeather.name,
-            );
-            return null;
+            throw error;
         }
     }
 
@@ -72,10 +112,6 @@ export class WeatherGraphqlResolver {
      *   getCurrentCityWeather(cityName: "New York") {
      *     current {
      *        temp_c
-     *        condition {
-     *            text
-     *            icon
-     *        }
      *      }
      *   }
      * }
@@ -83,23 +119,37 @@ export class WeatherGraphqlResolver {
      */
     @Query(() => CurrentCityWeather, {
         nullable: true,
-        description: "Get the current weather for a specified city.",
+        description: `Get the current weather for a specified city.
+        
+        query {
+            getCurrentCityWeather(cityName: "imo") {
+                location {
+                    name
+                    country
+                    lat
+                    lon
+                    region
+                    tz_id
+                }
+                current {
+                    temp_c
+                    condition {
+                        text
+                        icon
+                    }
+                }
+            }
+        }
+        
+        `,
     })
     async getCurrentCityWeather(
-        @Args("cityName", {
-            description:
-                "The name of the city for which to retrieve the current weather.",
-        })
-        cityName: string,
+        @Args() args: CityArgs,
     ): Promise<CurrentCityWeather | null> {
         try {
-            return await this.weatherService.getCurrentCityData(cityName);
+            return await this.weatherService.getCurrentCityData(args.city);
         } catch (error) {
-            this.customLoggerService.handleError(
-                error.message,
-                this.getCurrentCityWeather.name,
-            );
-            return null;
+            throw error;
         }
     }
 }

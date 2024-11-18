@@ -1,33 +1,36 @@
-import { Catch, HttpException, Logger } from "@nestjs/common";
-import { GqlExceptionFilter } from "@nestjs/graphql";
+import {
+    ArgumentsHost,
+    Catch,
+    ExceptionFilter,
+    HttpException,
+    Logger,
+} from "@nestjs/common";
+import { GqlArgumentsHost, GqlExceptionFilter } from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 
-@Catch()
-export class GraphQLErrorFilter implements GqlExceptionFilter {
-    private readonly logger = new Logger(GraphQLErrorFilter.name);
+@Catch(HttpException)
+export class GraphQLExceptionFilter implements ExceptionFilter {
+    private readonly logger = new Logger(GraphQLExceptionFilter.name);
 
-    catch(exception: Error) {
-        // Log the original error
+    catch(exception: HttpException, host: ArgumentsHost) {
+        const gqlHost = GqlArgumentsHost.create(host);
+
+        // Extract response details
+        const response = exception.getResponse() as any;
+        const status = exception.getStatus();
+        const errorMessage = Array.isArray(response?.message)
+            ? response.message.join(", ")
+            : response?.message || "An error occurred";
+
+        // Log the error for debugging
         this.logger.error(
-            `GraphQL Error: ${exception.message}`,
-            exception.stack,
+            `GraphQL Exception: STATUS [${status}] - MESSAGE [${errorMessage}]`,
         );
 
-        if (exception instanceof HttpException) {
-            // Handle NestJS HTTP exceptions
-            return new GraphQLError(exception.message, {
-                extensions: {
-                    code: this.getErrorCode(exception.getStatus()),
-                    status: exception.getStatus(),
-                },
-            });
-        }
-
-        // Handle other errors
-        return new GraphQLError("Internal server error", {
+        return new GraphQLError(errorMessage, {
             extensions: {
-                code: "INTERNAL_SERVER_ERROR",
-                status: 500,
+                code: this.getErrorCode(status),
+                status,
             },
         });
     }

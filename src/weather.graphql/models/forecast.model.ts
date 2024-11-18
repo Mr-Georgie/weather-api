@@ -31,7 +31,7 @@ export class Forecast {
 }
 
 @ObjectType()
-export class ForecastWeather {
+export class WeatherForecast {
     @Field(() => Location, { nullable: true })
     location: Location;
 

@@ -10,7 +10,7 @@ import { BadRequestException } from "@nestjs/common";
 
 describe("UsersService", () => {
     let service: UsersService;
-    let cacheService: CacheService<User>;
+    let cacheService: CacheService;
     let customLoggerService: CustomLoggerService;
     let usersRepository: any;
 
@@ -67,7 +67,7 @@ describe("UsersService", () => {
         }).compile();
 
         service = module.get<UsersService>(UsersService);
-        cacheService = module.get<CacheService<User>>(CacheService);
+        cacheService = module.get<CacheService>(CacheService);
         customLoggerService =
             module.get<CustomLoggerService>(CustomLoggerService);
         usersRepository = module.get(getRepositoryToken(User));

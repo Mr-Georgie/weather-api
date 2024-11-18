@@ -6,7 +6,7 @@ import { CACHE_KEYS, CACHE_TTL } from "src/cache/cache.config";
 import { AppConfigService } from "src/app-config/app-config.service";
 import { ExternalApiService } from "src/external-api/external-api.service";
 import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
-import { ForecastWeatherResponse } from "./interfaces/ForecastWeatherResponse";
+import { WeatherForecastResponse } from "./interfaces/WeatherForecastResponse";
 
 @Injectable()
 export class WeatherService {
@@ -49,19 +49,19 @@ export class WeatherService {
         return cityData as CurrentCityWeatherResponse;
     }
 
-    async getFiveDayForecast(city: string): Promise<ForecastWeatherResponse> {
+    async getFiveDayForecast(city: string): Promise<WeatherForecastResponse> {
         const method = this.getFiveDayForecast.name;
         const cacheKey = `${CACHE_KEYS.FORECAST}${city}`;
 
         let forecastData =
-            await this.cacheService.get<ForecastWeatherResponse>(cacheKey);
+            await this.cacheService.get<WeatherForecastResponse>(cacheKey);
 
         if (!forecastData) {
-            forecastData = await this.fetchWeatherData<ForecastWeatherResponse>(
+            forecastData = await this.fetchWeatherData<WeatherForecastResponse>(
                 city,
                 5,
             );
-            await this.cacheService.set<ForecastWeatherResponse>(
+            await this.cacheService.set<WeatherForecastResponse>(
                 cacheKey,
                 forecastData,
                 CACHE_TTL.FORECAST,

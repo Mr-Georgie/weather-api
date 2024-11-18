@@ -4,6 +4,8 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { WeatherModule } from "src/weather/weather.module";
 import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
+import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
+import { APP_FILTER } from "@nestjs/core";
 
 @Module({
     imports: [
@@ -16,10 +18,14 @@ import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
             playground: true, // Enables Apollo Studio Explorer
             // gracefully handle errors
             formatError: (error) => {
+                console.log("formatError invoked:", error);
+
                 const graphQLFormattedError = {
                     message: error.message,
                     data: error.extensions?.data,
-                    code: error.extensions?.code || ResponseMessagesEnum.SERVER_ERROR,
+                    code:
+                        error.extensions?.code ||
+                        ResponseMessagesEnum.SERVER_ERROR,
                     status: error.extensions?.status || 500,
                     path: error.path,
                     method: error.extensions?.method,
@@ -28,6 +34,12 @@ import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
             },
         }),
     ],
-    providers: [WeatherGraphqlResolver],
+    providers: [
+        WeatherGraphqlResolver,
+        {
+            provide: APP_FILTER,
+            useClass: GraphQLExceptionFilter,
+        },
+    ],
 })
 export class WeatherGraphqlModule {}
