@@ -3,13 +3,17 @@ import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./common/filters/http-exception.fliter";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
-import cookieParser from "cookie-parser";
+import * as cookieParser from "cookie-parser";
 import { LoggingInterceptor } from "./interceptors/logger.interceptor";
+import { GraphQLExceptionFilter } from "./common/filters/graphql-exception.filter";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalFilters(
+        new HttpExceptionFilter(),
+        new GraphQLExceptionFilter(),
+    );
     app.useGlobalInterceptors(new LoggingInterceptor());
 
     app.setGlobalPrefix("api/v1");

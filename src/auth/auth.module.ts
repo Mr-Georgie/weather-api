@@ -16,31 +16,31 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { CacheModule } from "src/cache/cache.module";
 import { CacheService } from "src/cache/cache.service";
+import { AppConfigService } from "src/app-config/app-config.service";
+import { AppConfigModule } from "src/app-config/app-config.module";
 
 @Module({
     imports: [
+        AppConfigModule,
         CommonModule,
         UsersModule,
         PassportModule,
         CacheModule,
         JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>("JWT_SECRET"),
+            imports: [AppConfigModule],
+            useFactory: async (appConfigService: AppConfigService) => ({
+                secret: appConfigService.getJwtSecret(),
                 signOptions: {
-                    expiresIn: parseInt(
-                        configService.getOrThrow<string>(
-                            "ACCESS_TOKEN_VALIDITY_DURATION_IN_SEC",
-                        ),
-                    ),
+                    expiresIn: appConfigService.getTokenExpirationTime(),
                 },
             }),
-            inject: [ConfigService],
+            inject: [AppConfigService],
         }),
         TypeOrmModule.forFeature([User]),
     ],
     controllers: [AuthController],
     providers: [
+        AppConfigService,
         AuthService,
         UsersService,
         CustomLoggerService,
