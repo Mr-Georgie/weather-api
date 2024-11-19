@@ -97,6 +97,7 @@ export class LocationsService {
                 method,
                 BadRequestException,
             );
+            return;
         }
 
         if (location.user_id !== userId) {

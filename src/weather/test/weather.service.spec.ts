@@ -6,6 +6,7 @@ import { CurrentCityWeatherResponse } from "../interfaces/CurrentCityWeatherResp
 import { CACHE_KEYS, CACHE_TTL } from "src/cache/cache.config";
 import { ExternalApiService } from "src/external-api/external-api.service";
 import { AppConfigService } from "src/app-config/app-config.service";
+import { WeatherForecastResponse } from "../interfaces/WeatherForecastResponse";
 
 describe("WeatherService", () => {
     let service: WeatherService;
@@ -53,6 +54,12 @@ describe("WeatherService", () => {
         temp_c: 34.4,
         temp_f: 93.9,
         is_day: 1,
+    };
+
+    const mockWeatherForecastData = {
+        location: {},
+        current: mockCityCurrentData,
+        forecast: {},
     };
 
     beforeEach(async () => {
@@ -121,6 +128,48 @@ describe("WeatherService", () => {
             const result = await service.getCurrentCityData(city);
 
             expect(result).toEqual(mockCityCurrentData);
+            expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
+            expect(customLoggerService.log).toHaveBeenCalled();
+        });
+    });
+
+    describe("getFiveDayForecast", () => {
+        const city = "lagos";
+        const cacheKey = `${CACHE_KEYS.FORECAST}${city}`;
+
+        it("should fetch a 5-day forecast data from external API if not found in the cache", async () => {
+            jest.spyOn(cacheService, "get").mockResolvedValue(null);
+            jest.spyOn(cacheService, "set").mockResolvedValue(undefined);
+            jest.spyOn(externalApiService, "fetchData").mockResolvedValue(
+                mockWeatherForecastData,
+            );
+            jest.spyOn(service, "fetchWeatherData").mockResolvedValue(
+                mockWeatherForecastData,
+            );
+
+            const result = await service.getFiveDayForecast(city);
+
+            expect(result).toEqual(mockWeatherForecastData);
+            expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
+            expect(cacheService.set).toHaveBeenCalledWith(
+                cacheKey,
+                mockWeatherForecastData,
+                CACHE_TTL.FORECAST,
+            );
+            expect(customLoggerService.log).toHaveBeenCalled();
+        });
+
+        it("should return a weather forecast for a city from the cache if found", async () => {
+            const mockCachedWeatherForecast =
+                mockWeatherForecastData as unknown as WeatherForecastResponse;
+
+            jest.spyOn(cacheService, "get").mockResolvedValue(
+                mockCachedWeatherForecast,
+            );
+
+            const result = await service.getCurrentCityData(city);
+
+            expect(result).toEqual(mockCachedWeatherForecast);
             expect(cacheService.get).toHaveBeenCalledWith(cacheKey);
             expect(customLoggerService.log).toHaveBeenCalled();
         });
