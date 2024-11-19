@@ -4,6 +4,7 @@ import {
     HttpException,
     Injectable,
     RequestTimeoutException,
+    UseFilters,
 } from "@nestjs/common";
 import { AxiosError } from "axios";
 import {
@@ -21,9 +22,11 @@ import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
 import { GraphQLError } from "graphql";
 import { ApiErrorResponse } from "./ApiErrorResponse";
 import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
+import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
 // import { ExternalApiErrorResponse } from "./ExternalApiResponse";
 
 @Injectable()
+@UseFilters(GraphQLExceptionFilter)
 export class ExternalApiService {
     constructor(
         private readonly httpService: HttpService,
@@ -102,6 +105,7 @@ export class ExternalApiService {
         return timer(delayMs);
     }
 
+
     private handleError(
         error: any,
         url: string,
@@ -163,17 +167,15 @@ export class ExternalApiService {
     }
 
     private formatCode(statusCode: number): string {
-        switch (
-            statusCode 
-        ) {
+        switch (statusCode) {
             case 400:
-                return ResponseMessagesEnum.BAD_REQUEST
+                return ResponseMessagesEnum.BAD_REQUEST;
             case 401:
-                return ResponseMessagesEnum.UNAUTHORIZED
+                return ResponseMessagesEnum.UNAUTHORIZED;
             case 403:
-                return ResponseMessagesEnum.API_KEY_LIMIT_ISSUES
+                return ResponseMessagesEnum.API_KEY_LIMIT_ISSUES;
             default:
-                return ResponseMessagesEnum.SERVER_ERROR
-            }
+                return ResponseMessagesEnum.SERVER_ERROR;
+        }
     }
 }

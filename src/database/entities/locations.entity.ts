@@ -8,12 +8,15 @@ import {
     BaseEntity,
     BeforeInsert,
     PrimaryGeneratedColumn,
-    OneToMany,
+    ManyToOne,
+    JoinColumn,
+    Unique,
 } from "typeorm";
-import { Location } from "./locations.entity";
+import { User } from "./users.entity";
 
 @Entity()
-export class User extends BaseEntity {
+@Unique(["user_id", "city"]) // Composite unique constraint
+export class Location extends BaseEntity {
     @PrimaryColumn("uuid", {
         primary: true,
         name: "id",
@@ -24,18 +27,21 @@ export class User extends BaseEntity {
     @Column({
         type: "varchar",
         nullable: false,
-        unique: true,
     })
-    email: string;
+    city: string;
 
-    @Column({
-        type: "varchar",
+    @ManyToOne(() => User, (user) => user.locations, {
+        nullable: false,
+        onDelete: "CASCADE",
+    })
+    @JoinColumn({ name: "user_id" })
+    user: User;
+
+    @Column("uuid", {
+        name: "user_id",
         nullable: false,
     })
-    password_hash: string;
-
-    @OneToMany(() => Location, location => location.user)
-    locations: Location[];
+    user_id: string;
 
     @CreateDateColumn({
         name: "created_at",

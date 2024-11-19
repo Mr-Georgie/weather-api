@@ -7,20 +7,29 @@ import {
 } from "@nestjs/common";
 import { GqlArgumentsHost, GqlExceptionFilter } from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
+import { ResponseMessagesEnum } from "../enums/response-messages.enum";
+import { LogMessagesEnum } from "../enums/log-messages.enum";
+import { getErrorCode } from "../utils/general.utils";
 
 @Catch(HttpException)
 export class GraphQLExceptionFilter implements ExceptionFilter {
     private readonly logger = new Logger(GraphQLExceptionFilter.name);
 
-    catch(exception: HttpException, host: ArgumentsHost) {
-        const gqlHost = GqlArgumentsHost.create(host);
+    catch(exception: any, host: ArgumentsHost) {
+        const gqlHost = GqlArgumentsHost.create(host); // Extract GraphQL context
+        if (!gqlHost) {
+            return; // Skip if it's not a GraphQL context
+        }
 
         // Extract response details
         const response = exception.getResponse() as any;
         const status = exception.getStatus();
+
+        let [code, message] = getErrorCode(status);
+
         const errorMessage = Array.isArray(response?.message)
             ? response.message.join(", ")
-            : response?.message || "An error occurred";
+            : response?.message || message;
 
         // Log the error for debugging
         this.logger.error(
@@ -29,26 +38,9 @@ export class GraphQLExceptionFilter implements ExceptionFilter {
 
         return new GraphQLError(errorMessage, {
             extensions: {
-                code: this.getErrorCode(status),
+                code: code,
                 status,
             },
         });
-    }
-
-    private getErrorCode(status: number): string {
-        switch (status) {
-            case 400:
-                return "BAD_REQUEST";
-            case 401:
-                return "UNAUTHORIZED";
-            case 403:
-                return "FORBIDDEN";
-            case 404:
-                return "NOT_FOUND";
-            case 429:
-                return "TOO_MANY_REQUESTS";
-            default:
-                return "INTERNAL_SERVER_ERROR";
-        }
     }
 }

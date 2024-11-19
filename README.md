@@ -1,107 +1,184 @@
 # Weather API Proxy
 
-This is the backend NestJS application configured to use TypeORM with a PostgreSQL database and Redis for caching. This README provides detailed instructions on how to set up and run the application.
+## Project Overview
+
+A comprehensive NestJS backend application that provides weather information through REST and GraphQL interfaces, with robust features including:
+
+-   Third-party weather API integration
+-   User authentication
+-   Favorite locations management
+-   Caching mechanisms
+-   Rate limiting
+-   Background job synchronization
+
+## Technology Stack
+
+-   **Backend Framework**: NestJS
+-   **Database**: PostgreSQL
+-   **ORM**: TypeORM
+-   **Caching**: Redis
+-   **Authentication**: JWT
+-   **API Types**: REST & GraphQL
+-   **Job Queue**: Bull
+-   **Rate Limiting**: NestJS Throttler
 
 ## Prerequisites
-
-Before running the application, ensure you have the following installed:
 
 -   Node.js (v20.x or later)
 -   npm (v10.x or later)
 -   PostgreSQL (v12.x or higher)
+-   Redis
 
-## Getting Started
+## Environment Configuration
 
-1. **Clone the Repository**
+### Application Settings
 
-```sh
-$ git clone https://github.com/mr-georgie/weatherapi.git
-$ cd core
+-   `PORT`: Server listening port (default: 8080)
+-   `CLIENT`: Frontend application URL
+
+### Authentication
+
+-   `JWT_SECRET`: Secret key for JWT token generation
+-   `ACCESS_TOKEN_VALIDITY_DURATION_IN_SEC`: Token expiration time
+
+### Database Configuration
+
+-   `DATABASE_HOST`: PostgreSQL database host
+-   `DATABASE_PORT`: Database port
+-   `DATABASE_USER`: Database username
+-   `DATABASE_PASS`: Database password
+-   `DATABASE_NAME`: Database name
+
+### External API Configuration
+
+-   `WEATHER_API_KEY`: WeatherAPI.com API key
+-   `WEATHER_API_CURRENT_CITY_URL`: Current weather endpoint
+-   `WEATHER_API_CITY_FORECAST_URL`: Forecast endpoint
+
+### Redis Configuration
+
+-   `REDIS_URL`: Complete Redis connection URL
+-   `REDIS_HOST`: Redis server host
+-   `REDIS_PORT`: Redis server port
+-   `REDIS_USER`: Redis username
+-   `REDIS_PASS`: Redis password
+-   `REDIS_DB`: Redis database number
+-   `REDIS_TTL`: Cache time-to-live (default: 1 minute)
+
+### Rate Limiting
+
+-   `PUBLIC_RATE_LIMIT_TTL`: Public endpoints time-to-live (default: 1 minute)
+-   `PUBLIC_RATE_LIMIT`: Public endpoints rate limit
+-   `AUTH_RATE_LIMIT_TTL`: Authenticated endpoints time-to-live (default: 1 minute)
+-   `AUTH_RATE_LIMIT`: Authenticated endpoints rate limit
+-   `WEATHER_RATE_LIMIT_TTL`: Weather query endpoints time-to-live (default: 1 minute)
+-   `WEATHER_RATE_LIMIT`: Weather query endpoints rate limit
+-   `FORECASE_RATE_LIMIT_TTL`: Forecast query endpoints time-to-live (default: 1 minute)
+-   `FORECASE_RATE_LIMIT`: Forecast query endpoints rate limit
+
+-   Separate rate limits for:
+    -   Public endpoints
+    -   Authenticated routes (locations endpoints are protected)
+    -   Weather-specific endpoints
+    -   Forecast endpoints
+
+### Background Job
+
+-   `WEATHER_SYNC_CRON`: Cron schedule for weather data synchronization
+
+## Installation
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/mr-georgie/weatherapi.git
+cd weatherapi
 ```
 
-2. **Install Dependencies**
+2. Install dependencies
 
-```sh
-$ npm install
+```bash
+npm install
 ```
 
-3. **Configure Environment Variables**
+3. Create .env file
 
-Create a .env file in the root directory of the project. You can use the .env.sample file as a template:
-
-```sh
+```bash
 cp .env.sample .env
+# Edit .env with your specific configurations
 ```
 
-Fill in the necessary environment variables in the .env file:
+## Database Setup
 
-```sh
-DATABASE_HOST="localhost"
-DATABASE_PORT="5432"
-DATABASE_USER="your username"
-DATABASE_PASS="your password"
-DATABASE_NAME="your database name"
-DATABASE_SCHEMA="your schema"
+### Migrations
+
+```bash
+# Generate migrations
+npm run migration:generate
+
+# Run migrations
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
 ```
 
-4. **a. Database Setup**
+### Running the Application
 
-Ensure your PostgreSQL server is running and the database credentials are specified in the `.env`. You can create the database using the PostgreSQL command line or any database management tool.
+```bash
+# Development mode
+npm run start:dev
 
-**b. Database migrations**
-
-Generate migrations:
-
-```sh
-  npm run migration:generate
+# Production mode
+npm run start:prod
 ```
 
-Run migrations:
+### Testing
 
-```sh
-  npm run migration:run
+```bash
+# Run unit tests
+npm run test
+
+# Run test coverage
+npm run test:cov
 ```
 
-Undo last migrations:
+## API Documentation
 
-```sh
-  npm run migration:revert
+1. Swagger documentation available at:
+
+```bash
+http://localhost:8080/api
 ```
 
-5. **Running the Application**
+2. GraphQL Playground:
 
-To run the application, use the following command:
-
-```sh
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```bash
+http://localhost:8080/graphql
 ```
 
-This will start the NestJS application, and it should connect to the PostgreSQL database using Sequelize.
+## Caching Strategy
 
-## Interactive API documentation (Swagger)
+-   Redis used for caching external API responses
+-   Default TTL: 1 minute
+-   Helps reduce external API calls and improve response times
 
-The endpoints are documented and can be tested using swagger.
-Swagger gives us an interface to make requests to the api & visualize its response(s).
+## Rate Limiting
 
-While the application is running in development mode navigate to the following address to interact with the application via the swagger interface:
+Implemented to prevent API abuse:
 
-```
-http://localhost:3000/api#/
-```
+-   Separate limits for different endpoint types
+-   Configurable per route
+-   Uses sliding window strategy
 
-## TypeORM
+## Authentication
 
-This project uses TypeORM as the ORM for database interactions. The out-of-the-box NestJS TypeORM package specifically.
+-   JWT-based authentication
+-   Secure token generation
+-   Token expiration management
 
-For more information on the package, refer to this [documentation](https://docs.nestjs.com/techniques/database#typeorm-integration).
+## Background Jobs
 
-## NestJS Framework
-
-This project is built with NestJS, a progressive Node.js framework for building efficient, reliable, and scalable server-side applications. For more information on NestJS, refer to their [documentation](https://docs.nestjs.com).
+-   Periodic weather data synchronization
+-   Configurable via cron expression
+-   Helps keep favorite locations updated

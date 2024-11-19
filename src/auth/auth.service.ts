@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
-import { PasswordService } from "src/common/services/password.service";
+import { PasswordService } from "src/auth/password.service";
 import { SignupUserDto } from "src/auth/dto/create-user.dto";
 import { UsersService } from "src/users/users.service";
 import { LoginUserDto } from "./dto/login-user.dto";
@@ -37,10 +37,7 @@ export class AuthService {
             hashedPassword,
         );
 
-        this.customLoggerService.log(
-            method,
-            LogMessagesEnum.USER_CREATED,
-        );
+        this.customLoggerService.log(method, LogMessagesEnum.USER_CREATED);
 
         return this.generateToken(user);
     }
@@ -82,7 +79,7 @@ export class AuthService {
 
         const isMatch: boolean = await this.passwordService.comparePasswords(
             password,
-            user.password,
+            user.password_hash,
         );
         if (!isMatch) {
             this.customLoggerService.logAndThrow(
@@ -92,12 +89,9 @@ export class AuthService {
             );
         }
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password_hash: _, ...userWithoutPassword } = user;
 
-        this.customLoggerService.log(
-            method,
-            LogMessagesEnum.PROCESS_COMPLETED,
-        );
+        this.customLoggerService.log(method, LogMessagesEnum.PROCESS_COMPLETED);
 
         return userWithoutPassword as User;
     }
@@ -109,7 +103,7 @@ export class AuthService {
             ResponseMessagesEnum.EMAIL_ALREADY_EXISTS,
         );
     }
-    
+
     private async findUser(email: string): Promise<User> {
         return (await this.handleUserLookup(
             email,
@@ -117,7 +111,6 @@ export class AuthService {
             ResponseMessagesEnum.ACCOUNT_NOT_FOUND,
         )) as User;
     }
-    
 
     private async handleUserLookup(
         email: string,
@@ -125,17 +118,17 @@ export class AuthService {
         errorMessage: ResponseMessagesEnum,
     ): Promise<User | void> {
         const method = this.handleUserLookup.name;
-    
+
         let user: User | null = null;
-    
+
         try {
             user = await this.usersService.findUserByEmail(email, isSignUp);
         } catch (error) {
             this.customLoggerService.handleError(error, method);
         }
-    
-        const foundUserDuringSignUp = (isSignUp && user)
-        const noUserFoundDuringLogin = (!isSignUp && !user)
+
+        const foundUserDuringSignUp = isSignUp && user;
+        const noUserFoundDuringLogin = !isSignUp && !user;
 
         if (foundUserDuringSignUp || noUserFoundDuringLogin) {
             this.customLoggerService.logAndThrow(
@@ -144,8 +137,7 @@ export class AuthService {
                 BadRequestException,
             );
         }
-    
+
         return user || undefined; // Explicitly return undefined for `void`
     }
-    
 }

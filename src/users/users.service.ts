@@ -23,7 +23,7 @@ export class UsersService {
         try {
             const user = this.usersRepository.create({
                 email,
-                password,
+                password_hash: password,
             });
 
             createdUser = await this.usersRepository.save(user);
@@ -70,7 +70,7 @@ export class UsersService {
 
         // handle error here as this would likely be called by controllers
         try {
-            user = await this.fetchUserFromCache(id, cacheKey);
+            user = await this.fetchUserFromCache(cacheKey);
 
             if (!user) {
                 user = await this.fetchUserFromDb(id, cacheKey);
@@ -102,7 +102,6 @@ export class UsersService {
     }
 
     private async fetchUserFromCache(
-        id: string,
         cacheKey: string,
     ): Promise<User> {
         // const cachedUser = await this.cacheService.get<User>(cacheKey);
@@ -127,7 +126,7 @@ export class UsersService {
             LogMessagesEnum.DB_READ_SUCCESS,
         );
 
-        const { password: _, ...userWithoutPassword } = user;
+        const { password_hash: _, ...userWithoutPassword } = user;
 
         // Store in cache only if user is found
         await this.cacheService.set(

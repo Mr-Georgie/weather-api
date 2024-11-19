@@ -1,39 +1,51 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { HttpExceptionFilter } from "./common/filters/http-exception.fliter";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
 import * as cookieParser from "cookie-parser";
 import { LoggingInterceptor } from "./interceptors/logger.interceptor";
-import { GraphQLExceptionFilter } from "./common/filters/graphql-exception.filter";
+import helmet from "helmet";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.useGlobalFilters(
-        new HttpExceptionFilter(),
-        new GraphQLExceptionFilter(),
-    );
     app.useGlobalInterceptors(new LoggingInterceptor());
 
     app.setGlobalPrefix("api/v1");
 
+    app.use(
+        helmet({
+            contentSecurityPolicy: false, // Disable CSP to enable GQL Playground
+            crossOriginEmbedderPolicy: false, // this too
+        }),
+    );
+
     app.use(cookieParser());
+
+    app.enableCors({
+        origin: process.env.CLIENT,
+        credentials: true,
+    });
 
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
     const config = new DocumentBuilder()
-        .setTitle("Weather Proxy")
+        .setTitle("Weather API Proxy")
         .setDescription(
-            "This API serves as a wrapper for a third-party weather API",
+            `This API serves as a wrapper for a third-party weather API.
+
+            Version: 1.0.1
+            REST Endpoint: https://{Host}:{Port}/api/v1
+            GraphQL Endpoint: https://{Host}:{Port}/graphql`,
         )
-        .setVersion("1.0")
+        .setVersion("1.0.1")
         .addTag("") // will add something here
         .addBearerAuth(
             { type: "http", scheme: "bearer", bearerFormat: "JWT" },
             "access-token",
         )
         .build();
+
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api", app, document, {
         customCssUrl:
