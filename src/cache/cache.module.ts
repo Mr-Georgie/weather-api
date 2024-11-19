@@ -15,7 +15,7 @@ import { AppConfigModule } from "src/app-config/app-config.module";
                 const host = appConfigService.getRedisHost();
                 const port = appConfigService.getRedisPort();
                 const password = appConfigService.getRedisPassword();
-                const db = appConfigService.getRedisName();
+                const db = appConfigService.getRedisDbName();
                 const username = appConfigService.getRedisUsername();
                 const ttl = appConfigService.getRedisTtl();
                 const secondary = new KeyvRedis(

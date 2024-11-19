@@ -1,11 +1,12 @@
 import { Module } from "@nestjs/common";
-import { WeatherGraphqlResolver } from "./weather.graphql.resolver";
 import { GraphQLModule } from "@nestjs/graphql";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { WeatherModule } from "src/weather/weather.module";
 import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
 import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
 import { APP_FILTER } from "@nestjs/core";
+import { WeatherResolver } from "./weather.resolver";
+import { ForecastResolver } from "./forecast.resolver";
 
 @Module({
     imports: [
@@ -16,10 +17,9 @@ import { APP_FILTER } from "@nestjs/core";
             sortSchema: true, // Keeps schema organized
             introspection: true, // Enables schema exploration
             playground: true, // Enables Apollo Studio Explorer
+            context: ({ req, res }) => ({ req, res }),
             // gracefully handle errors
             formatError: (error) => {
-                console.log("formatError invoked:", error);
-
                 const graphQLFormattedError = {
                     message: error.message,
                     data: error.extensions?.data,
@@ -35,7 +35,8 @@ import { APP_FILTER } from "@nestjs/core";
         }),
     ],
     providers: [
-        WeatherGraphqlResolver,
+        WeatherResolver,
+        ForecastResolver,
         {
             provide: APP_FILTER,
             useClass: GraphQLExceptionFilter,

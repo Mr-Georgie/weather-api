@@ -19,7 +19,7 @@ describe("UsersService", () => {
     const mockUser = {
         id: "some-user-id",
         email: testEmail,
-        password: "password123",
+        password_hash: "password123",
         created_at: "2024-11-15T12:55:19.631Z",
         updated_at: "2024-11-15T12:55:19.631Z",
         deleted_at: null,
@@ -28,7 +28,7 @@ describe("UsersService", () => {
     const mockDeletedUser = {
         id: "some-user-id",
         email: testEmail,
-        password: "password123",
+        password_hash: "password123",
         created_at: "2024-11-15T12:55:19.631Z",
         updated_at: "2024-11-15T12:55:19.631Z",
         deleted_at: "2024-11-16T12:55:19.631Z",
@@ -125,7 +125,7 @@ describe("UsersService", () => {
         });
 
         it("should fetch a user from the database if not found in the cache", async () => {
-            const { password: _, ...userWithoutPassword } = mockUser;
+            const { password_hash: _, ...userWithoutPassword } = mockUser;
 
             jest.spyOn(cacheService, "get").mockResolvedValue(null);
             jest.spyOn(usersRepository, "findOne").mockResolvedValue(mockUser);

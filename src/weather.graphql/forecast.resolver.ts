@@ -2,17 +2,23 @@ import { Resolver, Query, Args } from "@nestjs/graphql";
 import { WeatherService } from "src/weather/weather.service";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { WeatherForecast } from "./models/forecast.model";
-import { CurrentCityWeather } from "./models/current.model";
 import { CityArgs } from "./dto/city.dto";
-import { GraphQLError } from "graphql";
+import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
+import { UseFilters, UseGuards } from "@nestjs/common";
+import { GqlThrottlerGuard } from "src/throttler/gql-throttler-guard";
+import { Throttle } from "@nestjs/throttler";
+import { AppConfigService } from "src/app-config/app-config.service";
+import { RATE_LIMITS } from "src/throttler/rate-limit.config";
+// import { Throttle } from "@nestjs/throttler";
 
 /**
  * GraphQL Resolver for handling weather-related queries.
- * This resolver provides endpoints to fetch both the 5-day weather forecast
- * and the current weather for a specified city.
+ * This resolver provides endpoints to fetch the 5-day weather forecast
  */
-@Resolver()
-export class WeatherGraphqlResolver {
+@UseFilters(GraphQLExceptionFilter)
+@Resolver(() => WeatherForecast)
+@UseGuards(GqlThrottlerGuard)
+export class ForecastResolver {
     /**
      * @param weatherService Service for fetching weather data from external APIs.
      * @param customLoggerService Service for logging errors and other runtime information.
@@ -20,6 +26,7 @@ export class WeatherGraphqlResolver {
     constructor(
         private readonly weatherService: WeatherService,
         private readonly customLoggerService: CustomLoggerService,
+        private readonly appConfigService: AppConfigService,
     ) {}
 
     /**
@@ -31,7 +38,7 @@ export class WeatherGraphqlResolver {
      * Query:
      * ```
      * query {
-     *  getWeatherForecast(cityName: "new") {
+     *  getWeatherForecast(city: "new") {
      *       location {
      *          name
      *         country
@@ -40,13 +47,15 @@ export class WeatherGraphqlResolver {
      *}
      * ```
      */
+    @UseGuards(GqlThrottlerGuard)
+    @Throttle({ default: RATE_LIMITS.FORECAST })
     @Query(() => WeatherForecast, {
         nullable: true,
-        description: `Get the current weather for a specified city.
+        description: `Get the weather forecast for a specified city.
 
             Example Query:
             query {
-                getWeatherForecast(cityName: "leeds") {
+                getWeatherForecast(city: "leeds") {
                     location {
                         name
                         country
@@ -93,61 +102,10 @@ export class WeatherGraphqlResolver {
     async getWeatherForecast(
         @Args() args: CityArgs,
     ): Promise<WeatherForecast | null> {
+        // sanitize to lowercase
+        const city = args.city.toLowerCase();
         try {
-            return await this.weatherService.getFiveDayForecast(args.city);
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    /**
-     * Fetches the current weather for a specified city.
-     * @param cityName Name of the city for which the current weather is requested.
-     * @returns A `CurrentCityWeather` object containing current weather data, or `null` if not found.
-     *
-     * @example
-     * Query:
-     * ```
-     * query {
-     *   getCurrentCityWeather(cityName: "New York") {
-     *     current {
-     *        temp_c
-     *      }
-     *   }
-     * }
-     * ```
-     */
-    @Query(() => CurrentCityWeather, {
-        nullable: true,
-        description: `Get the current weather for a specified city.
-        
-        query {
-            getCurrentCityWeather(cityName: "imo") {
-                location {
-                    name
-                    country
-                    lat
-                    lon
-                    region
-                    tz_id
-                }
-                current {
-                    temp_c
-                    condition {
-                        text
-                        icon
-                    }
-                }
-            }
-        }
-        
-        `,
-    })
-    async getCurrentCityWeather(
-        @Args() args: CityArgs,
-    ): Promise<CurrentCityWeather | null> {
-        try {
-            return await this.weatherService.getCurrentCityData(args.city);
+            return await this.weatherService.getFiveDayForecast(city);
         } catch (error) {
             throw error;
         }

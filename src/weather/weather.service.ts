@@ -1,4 +1,8 @@
-import { Injectable, RequestTimeoutException } from "@nestjs/common";
+import {
+    Injectable,
+    RequestTimeoutException,
+    UseFilters,
+} from "@nestjs/common";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { CurrentCityWeatherResponse } from "./interfaces/CurrentCityWeatherResponse";
 import { CacheService } from "src/cache/cache.service";
@@ -7,8 +11,10 @@ import { AppConfigService } from "src/app-config/app-config.service";
 import { ExternalApiService } from "src/external-api/external-api.service";
 import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
 import { WeatherForecastResponse } from "./interfaces/WeatherForecastResponse";
+import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
 
 @Injectable()
+@UseFilters(GraphQLExceptionFilter)
 export class WeatherService {
     constructor(
         private readonly customLoggerService: CustomLoggerService,
@@ -85,7 +91,7 @@ export class WeatherService {
         return forecastData;
     }
 
-    private async fetchWeatherData<T>(city: string, days?: number): Promise<T> {
+    async fetchWeatherData<T>(city: string, days?: number): Promise<T> {
         const method = this.fetchWeatherData.name;
         const apiKey = this.appConfigService.getWeatherApiKey();
         const cityEndpoint =

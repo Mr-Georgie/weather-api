@@ -52,6 +52,10 @@ export class AppConfigService {
         return this.getStringConfig("DATABASE_NAME");
     }
 
+    getRedisUrl(): string {
+        return this.getStringConfig("REDIS_URL");
+    }
+
     getRedisHost(): string {
         return this.getStringConfig("REDIS_HOST");
     }
@@ -65,7 +69,7 @@ export class AppConfigService {
         return this.getStringConfig("REDIS_PASS");
     }
 
-    getRedisName(): string {
+    getRedisDbName(): string {
         return this.getStringConfig("REDIS_DB");
     }
     getRedisTtl(): number {
@@ -81,6 +85,38 @@ export class AppConfigService {
     }
     getWeatherApiCityForecastUrl(): string {
         return this.getStringConfig("WEATHER_API_CITY_FORECAST_URL");
+    }
+
+    getPublicRateLimitTtl(): number {
+        return this.getNumberConfig("PUBLIC_RATE_LIMIT_TTL", 60000);
+    }
+
+    getPublicRateLimit(): number {
+        return this.getNumberConfig("PUBLIC_RATE_LIMIT", );
+    }
+
+    getAuthRateLimitTtl(): number {
+        return this.getNumberConfig("AUTH_RATE_LIMIT_TTL");
+    }
+
+    getAuthRateLimit(): number {
+        return this.getNumberConfig("AUTH_RATE_LIMIT");
+    }
+
+    getWeatherRateLimitTtl(): number {
+        return this.getNumberConfig("WEATHER_RATE_LIMIT_TTL");
+    }
+
+    getWeatherRateLimit(): number {
+        return this.getNumberConfig("WEATHER_RATE_LIMIT");
+    }
+
+    getForecastRateLimitTtl(): number {
+        return this.getNumberConfig("FORECASE_RATE_LIMIT_TTL");
+    }
+
+    getForecastRateLimit(): number {
+        return this.getNumberConfig("FORECASE_RATE_LIMIT");
     }
 
     private getStringConfig(key: string, defaultValue?: string): string {

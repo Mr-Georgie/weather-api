@@ -1,7 +1,5 @@
-import { InternalServerErrorException } from "@nestjs/common";
-import { ResponseMessagesEnum } from "../enums/response-messages.enum";
-
 export interface CustomApiResponse<T = any> {
+    status: string;
     statusCode: number;
     message: string;
     data?: T;
@@ -9,12 +7,14 @@ export interface CustomApiResponse<T = any> {
 }
 
 export function createResponse<T>(
+    status: string,
     statusCode: number,
     message: string,
     data?: T,
     error?: string,
 ): CustomApiResponse<T> {
     return {
+        status,
         statusCode,
         message,
         data,

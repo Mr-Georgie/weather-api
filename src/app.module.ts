@@ -8,15 +8,18 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { AuthModule } from "./auth/auth.module";
 import { CacheModule } from "./cache/cache.module";
 import { WeatherGraphqlModule } from "./weather.graphql/weather.graphql.module";
-import { UsersService } from "./users/users.service";
 import { ExternalApiModule } from "./external-api/external-api.module";
 import { AppConfigService } from "./app-config/app-config.service";
 import { AppConfigModule } from "./app-config/app-config.module";
-import { CustomLoggerService } from "./common/services/custom-logger.service";
-import { CacheService } from "./cache/cache.service";
-import { ExternalApiService } from "./external-api/external-api.service";
-import { HttpModule, HttpService } from "@nestjs/axios";
 import { WeatherModule } from "./weather/weather.module";
+import { LocationsModule } from "./locations/locations.module";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { GqlThrottlerGuard } from "./throttler/gql-throttler-guard";
+import { CustomThrottlerModule } from "./throttler/throttler.module";
+import { ScheduleModule } from "@nestjs/schedule";
+import { BullModule } from "@nestjs/bull";
 
 @Module({
     imports: [
@@ -24,8 +27,10 @@ import { WeatherModule } from "./weather/weather.module";
             envFilePath: ".env",
             isGlobal: true,
         }),
+        ScheduleModule.forRoot(),
         TypeOrmModule.forRootAsync({
             imports: [AppConfigModule],
+            inject: [AppConfigService],
             useFactory: (appConfigService: AppConfigService) => ({
                 type: "postgres",
                 host: appConfigService.getDbHost(),
@@ -41,8 +46,16 @@ import { WeatherModule } from "./weather/weather.module";
                 namingStrategy: new SnakeNamingStrategy(),
                 softDelete: true,
             }),
-            inject: [AppConfigService],
         }),
+        BullModule.forRootAsync({
+            imports: [AppConfigModule],
+            inject: [AppConfigService],
+            useFactory: (appConfigService: AppConfigService) => ({
+                redis: appConfigService.getRedisUrl(),
+            }),
+        }),
+
+        CustomThrottlerModule,
         AuthModule,
         ExternalApiModule,
         CacheModule,
@@ -50,6 +63,7 @@ import { WeatherModule } from "./weather/weather.module";
         WeatherModule,
         WeatherGraphqlModule,
         ExternalApiModule,
+        LocationsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
