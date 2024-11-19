@@ -157,28 +157,134 @@ http://localhost:8080/api
 http://localhost:8080/graphql
 ```
 
-## Caching Strategy
+## Design Decisions and Architecture Rationale
 
--   Redis used for caching external API responses
--   Default TTL: 1 minute
--   Helps reduce external API calls and improve response times
+### GraphQL for Weather Data Fetching
 
-## Rate Limiting
+-   **Motivation**: Provide flexible API access
+-   **Implementation**:
+    -   GraphQL for weather data fetching
+    -   REST for authentication and location management
+-   **Benefits**:
 
-Implemented to prevent API abuse:
+    -   Precise Data Retrieval:
+        -   Weather forecast data is large and complex
+        -   GraphQL allows clients to request exactly the data they need
+        -   Prevents over-fetching or under-fetching of information
+        -   Significant bandwidth savings
+        -   Lower data transfer costs
+        -   Flexible Schema Design
 
--   Separate limits for different endpoint types
--   Configurable per route
--   Uses sliding window strategy
+-   Sample Query
 
-## Authentication
+```bash
+query {
+  getCurrentCityWeather(city: "London") {
+    # Client can select only required fields
+    location {
+      name
+      country
+      lat
+      lon
+      region
+      tz_id
+    }
+    current {
+      temp_c
+    }
+  }
+}
+```
 
--   JWT-based authentication
--   Secure token generation
--   Token expiration management
+### REST API for location CRUD operations and Auth Endpoints
 
-## Background Jobs
+-   **Why REST for Authentication**:
 
--   Periodic weather data synchronization
--   Configurable via cron expression
--   Helps keep favorite locations updated
+    -   More straightforward session management
+    -   Industry standard for auth flows
+    -   Better support for HTTP-only cookies
+    -   Clearer security headers handling
+    -   Simpler implementation of token-based auth
+    -   More intuitive error handling for auth failures
+    -   Simpler request/response cycle
+    -   Easier to implement middleware for auth check
+
+-   **Why REST for Location Management**:
+    -   Natural fit for CRUD operations
+    -   Clear HTTP method mapping:
+        -   POST: Create new location
+        -   GET: Retrieve locations
+        -   DELETE: Remove location
+
+### Caching Strategy
+- **Approach**: Redis-based caching with differentiated TTL
+- **Rationale**: 
+  - Shorter TTL for current weather (smaller dataset)
+  - Longer TTL for forecast data
+- **Performance Optimization**: 
+  - Reduced external API calls
+  - Improved response times
+  - Cost-effective API usage
+
+### Authentication and Security
+- **Authentication Mechanism**: JWT-based
+- **Security Enhancements**:
+  - Password hashing
+  - UUID for primary keys (prevents IDOR)
+  - Soft deletion of records
+  - Recommended HTTP-only cookies for production
+- **Input Sanitization**: 
+  - Transform inputs to lowercase
+  - DTO validation
+
+### Background Job Management
+- **Technology**: Bull job queue
+- **Purpose**: 
+  - Periodic weather data synchronization
+  - Configurable cron jobs
+  - Efficient background processing
+
+### Code Quality and Maintainability
+- **Type Safety**:
+  - Extensive use of interfaces
+  - Enums to replace magic strings
+- **Modularization**:
+  - Dependency Injection (DI)
+  - Service-specific exception handling
+- **Logging**:
+  - Comprehensive logging
+  - Improved debugging
+  - Enhanced monitoring capabilities
+
+### AppConfig Service
+- **Functionality**: 
+  - Centralized environment variable management
+  - Default value setting
+  - Graceful error handling during configuration
+
+### Testing Strategy
+- **Focus Areas**:
+  - Core services (Weather Service)
+  - API data services
+  - Authentication flows
+- **Purpose**: 
+  - Ensure core functionality
+  - Validate critical components
+
+### API Response Standardization
+- **Implementation**: Standard API response object
+- **Benefits**:
+  - Consistent response structure
+  - Easier client-side parsing
+  - Improved error handling
+
+## Future Improvements
+
+- [ ] Implement HTTP-only cookies
+- [ ] Add token rotation and refresh mechanisms
+- [ ] Integrate with log management systems
+- [ ] Implement Caching invalidation
+- [ ] Implement more comprehensive test coverage
+- [ ] Add advanced caching strategies
+- [ ] Authentication on GraphQL endpoints
+- [ ] Implement advanced GraphQL features
