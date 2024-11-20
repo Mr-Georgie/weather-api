@@ -92,31 +92,31 @@ export class AppConfigService {
     }
 
     getPublicRateLimit(): number {
-        return this.getNumberConfig("PUBLIC_RATE_LIMIT", );
+        return this.getNumberConfig("PUBLIC_RATE_LIMIT", 20);
     }
 
     getAuthRateLimitTtl(): number {
-        return this.getNumberConfig("AUTH_RATE_LIMIT_TTL");
+        return this.getNumberConfig("AUTH_RATE_LIMIT_TTL", 60000);
     }
 
     getAuthRateLimit(): number {
-        return this.getNumberConfig("AUTH_RATE_LIMIT");
+        return this.getNumberConfig("AUTH_RATE_LIMIT", 30);
     }
 
     getWeatherRateLimitTtl(): number {
-        return this.getNumberConfig("WEATHER_RATE_LIMIT_TTL");
+        return this.getNumberConfig("WEATHER_RATE_LIMIT_TTL", 60000);
     }
 
     getWeatherRateLimit(): number {
-        return this.getNumberConfig("WEATHER_RATE_LIMIT");
+        return this.getNumberConfig("WEATHER_RATE_LIMIT", 10);
     }
 
     getForecastRateLimitTtl(): number {
-        return this.getNumberConfig("FORECASE_RATE_LIMIT_TTL");
+        return this.getNumberConfig("FORECASE_RATE_LIMIT_TTL", 60000);
     }
 
     getForecastRateLimit(): number {
-        return this.getNumberConfig("FORECASE_RATE_LIMIT");
+        return this.getNumberConfig("FORECASE_RATE_LIMIT", 6);
     }
 
     private getStringConfig(key: string, defaultValue?: string): string {

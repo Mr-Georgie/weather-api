@@ -104,7 +104,6 @@ export class UsersService {
     private async fetchUserFromCache(
         cacheKey: string,
     ): Promise<User> {
-        // const cachedUser = await this.cacheService.get<User>(cacheKey);
         const cachedUser = await this.cacheService.get<User>(cacheKey);
 
         if (cachedUser) {

@@ -20,7 +20,7 @@ import { AppConfigService } from "src/app-config/app-config.service";
 import { CustomLoggerService } from "src/common/services/custom-logger.service";
 import { LogMessagesEnum } from "src/common/enums/log-messages.enum";
 import { GraphQLError } from "graphql";
-import { ApiErrorResponse } from "./ApiErrorResponse";
+import { ApiErrorResponse } from "./interfaces/ApiErrorResponse";
 import { ResponseMessagesEnum } from "src/common/enums/response-messages.enum";
 import { GraphQLExceptionFilter } from "src/common/filters/graphql-exception.filter";
 // import { ExternalApiErrorResponse } from "./ExternalApiResponse";

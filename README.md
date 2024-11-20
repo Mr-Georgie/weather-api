@@ -33,7 +33,7 @@ A comprehensive NestJS backend application that provides weather information thr
 
 ### Application Settings
 
--   `PORT`: Server listening port (default: 8080)
+-   `PORT`: Server listening port (default: 3000)
 -   `CLIENT`: Frontend application URL
 
 ### Authentication
@@ -148,13 +148,13 @@ npm run test:cov
 1. Swagger documentation available at:
 
 ```bash
-http://localhost:8080/api
+http://localhost:3000/api
 ```
 
 2. GraphQL Playground:
 
 ```bash
-http://localhost:8080/graphql
+http://localhost:3000/graphql
 ```
 
 ## Design Decisions and Architecture Rationale
@@ -164,7 +164,6 @@ http://localhost:8080/graphql
 -   **Motivation**: Provide flexible API access
 -   **Implementation**:
     -   GraphQL for weather data fetching
-    -   REST for authentication and location management
 -   **Benefits**:
 
     -   Precise Data Retrieval:
@@ -265,8 +264,8 @@ query {
 ### Testing Strategy
 - **Focus Areas**:
   - Core services (Weather Service)
-  - API data services
-  - Authentication flows
+  - External API data service
+  - User services relating to authentication
 - **Purpose**: 
   - Ensure core functionality
   - Validate critical components
@@ -282,9 +281,7 @@ query {
 
 - [ ] Implement HTTP-only cookies
 - [ ] Add token rotation and refresh mechanisms
-- [ ] Integrate with log management systems
 - [ ] Implement Caching invalidation
 - [ ] Implement more comprehensive test coverage
-- [ ] Add advanced caching strategies
+- [ ] Extend caching strategies
 - [ ] Authentication on GraphQL endpoints
-- [ ] Implement advanced GraphQL features
